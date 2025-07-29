@@ -1,6 +1,6 @@
 [project]
 name = "dlrm"  # PyPI에 등록할 이름 (고유)
-version = "0.1.1"
+version = "0.1.4"
 description = "resource management with file system in deep learning research"
 readme = "README.md"
 requires-python = ">=3.8"

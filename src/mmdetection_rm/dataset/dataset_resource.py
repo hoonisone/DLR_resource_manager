@@ -45,7 +45,7 @@ class DatasetDBView(DBView):
 
 @dataclass
 class DatasetResourceFactory(ResourceDBFactory[DatasetConfigManager, DatasetRecord, DatasetDB, DatasetDBView]):
-    dir_path:Path = field(default=get_settings().dataset_dir)
+    dir_path:Path = field(default_factory=lambda : get_settings().dataset_dir)
     
     CONFIG_MANAGER_CLASS:Type[ConfigManager] = DatasetConfigManager
     RECORD_CLASS:Type[ResourceRecord] = DatasetRecord

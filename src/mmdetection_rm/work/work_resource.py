@@ -159,7 +159,7 @@ class WorkDBView(DBView):
 
 @dataclass
 class WorkResourceFactory(ResourceDBFactory[WorkConfigManager, WorkRecord, WorkDB, WorkDBView]):
-    dir_path:Path = field(default=get_settings().work_dir)
+    dir_path:Path = get_settings().work_dir
     
     CONFIG_MANAGER_CLASS:Type[ConfigManager] = WorkConfigManager
     RECORD_CLASS:Type[ResourceRecord] = WorkRecord
