@@ -6,7 +6,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Dict, Generic, Type, TypeVar
 
 from ..dirdb.dirdb import ID, NAME, DirDB
-from .record import ConfigManager, ResourceRecord
+from .record import PropertyManager, ResourceRecord
 import pandas as pd
 
 if TYPE_CHECKING:

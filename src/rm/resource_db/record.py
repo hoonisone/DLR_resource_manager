@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import Generic, TypeVar
 
 from rm.dirdb.dirdb import ID, NAME
-from rm.resource_db.config_manager import ConfigManager
+from rm.resource_db.config_manager import PropertyManager
 
-RESOURCE_CONFIG_MANAGER = TypeVar('CONFIG_MANAGER_CLASS', bound=ConfigManager)
+RESOURCE_CONFIG_MANAGER = TypeVar('CONFIG_MANAGER_CLASS', bound=PropertyManager)
 
 @dataclass
 class ResourceRecord(Generic[RESOURCE_CONFIG_MANAGER]):

@@ -29,6 +29,9 @@ class Memo(ABC):
 
 @dataclass
 class FileMemo(Memo):
+    # 간단한 데이터를 파일에 get, set 하는 객체
+    # 데이터 읽기는 캐시하며, 수정 발생 시 파일 업데이트트
+
     file_path:Path
     file_io:FileIO
     content: CONTENT_TYPE
@@ -38,10 +41,10 @@ class FileMemo(Memo):
             self.file_io.create(self.file_path)
         self.content = self.file_io.read(self.file_path)
 
-    def get(self)->Any: # 데이터를 전부 반환
+    def get(self)->Any: # 데이터를 통으로 반환 (캐싱됌)
         return self.content
     
-    def set(self, data)->None: # 데이터를 전부 저장
+    def set(self, data)->None: # 데이터를 통으로 저장
         self.content = data
         self.file_io.write(self.file_path, self.content)
 
@@ -49,4 +52,16 @@ class FileMemo(Memo):
         self.content = None
         if self.file_path.exists():
             self.file_io.remove(self.file_path)
+    
+class KeyValueMamo(Memo):
+    memo:Memo
+
+    def get(self, key:str)->Any:
+        return self.memo.get()[key]
+    
+    def set(self, key:str, value:Any)->None:
+        self.memo.set({**self.memo.get(), key:value})
+    
+    def clear(self):
+        self.memo.clear()
     

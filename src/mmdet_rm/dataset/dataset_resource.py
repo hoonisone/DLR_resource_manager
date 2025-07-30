@@ -3,8 +3,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import Type
 
-from mmdetection_rm.settings import get_settings
-from rm import ConfigManager, DBView, ResourceDBFactory, ResourceRecord, ResourceDB, ID, NAME
+from mmdet_rm.settings import get_settings
+from rm import PropertyManager, DBView, ResourceDBFactory, ResourceRecord, ResourceDB, ID, NAME
 
 @dataclass
 class DatasetConfigKey:
@@ -12,7 +12,7 @@ class DatasetConfigKey:
     ANNOTATION_DIR:str = "annotation_file_path"
 
 @dataclass
-class DatasetConfigManager(ConfigManager):
+class DatasetConfigManager(PropertyManager):
     # 데이터 셋 리소스에 대한 config를 관리하는 객체
 
     @cached_property
@@ -33,10 +33,9 @@ class DatasetDB(ResourceDB[DatasetRecord]):
     
     def create(self, name:NAME)->DatasetRecord:
         record = super().create(name)
-        record.config_manager.set_config({
-            DatasetConfigKey.DATA_DIR:(record.dir_path / "data").as_posix(),
-            DatasetConfigKey.ANNOTATION_DIR:(record.dir_path / "annotation.json").as_posix()
-        })
+        record.config_manager.set(DatasetConfigKey.DATA_DIR, (record.dir_path / "data").as_posix())
+        record.config_manager.set(DatasetConfigKey.ANNOTATION_DIR, (record.dir_path / "annotation.json").as_posix())
+
         return record
 
 class DatasetDBView(DBView):
@@ -47,7 +46,7 @@ class DatasetDBView(DBView):
 class DatasetResourceFactory(ResourceDBFactory[DatasetConfigManager, DatasetRecord, DatasetDB, DatasetDBView]):
     dir_path:Path = field(default_factory=lambda : get_settings().dataset_dir)
     
-    CONFIG_MANAGER_CLASS:Type[ConfigManager] = DatasetConfigManager
+    CONFIG_MANAGER_CLASS:Type[PropertyManager] = DatasetConfigManager
     RECORD_CLASS:Type[ResourceRecord] = DatasetRecord
     DB_CLASS:Type[ResourceDB] = DatasetDB
     VIEW_CLASS:Type[DatasetDBView] = DatasetDBView

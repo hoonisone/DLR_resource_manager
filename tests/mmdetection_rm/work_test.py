@@ -1,6 +1,6 @@
 import shutil
-from mmdetection_rm.factory import MMDetection_RM_Factory
-from mmdetection_rm.settings import get_settings
+from mmdet_rm.factory import MMDetection_RM_Factory
+from mmdet_rm.settings import get_settings
 
 
 def test_work_resource_factory():

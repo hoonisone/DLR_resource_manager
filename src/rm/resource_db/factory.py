@@ -5,7 +5,7 @@ from typing import Type
 
 
 
-from .config_manager import ConfigManager
+from .config_manager import PropertyManager
 from ..memo import MemoFactory
 from ..dirdb.dirdb import ID, NAME
 from ..dirdb.factory import DirDBFactory
@@ -16,7 +16,7 @@ from .view import DBView
 
 from typing import TypeVar, Generic, Type
 
-CONFIG_MANAGER = TypeVar('CONFIG_MANAGER', bound=ConfigManager)
+CONFIG_MANAGER = TypeVar('CONFIG_MANAGER', bound=PropertyManager)
 RESOURCE_RECORD = TypeVar('RESOURCE_RECORD', bound=ResourceRecord)
 RESOURCE_DB = TypeVar('RESOURCE_DB', bound=ResourceDB)
 DB_VIEW = TypeVar('DB_VIEW', bound=DBView)

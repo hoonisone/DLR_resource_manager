@@ -5,7 +5,7 @@ import shutil
 from typing import Optional, Type
 
 from ..settings import get_settings
-from rm import NAME, ConfigManager, ResourceDB, ResourceDBFactory, ResourceRecord, ID, DBView
+from rm import NAME, PropertyManager, ResourceDB, ResourceDBFactory, ResourceRecord, ID, DBView
 # from resource_manager.dirdb.dirdb import DirDB
 # from resource_manager.dirdb.factory import DirDBFactory
 # from resource_manager.memo import MemoFactory
@@ -16,7 +16,7 @@ from .task import TaskConfigKey, TaskDB, TaskDBView, TaskResourceFactory, TaskRe
 
 
 @dataclass
-class WorkConfigKey:
+class Work_PropertyKey:
     # TRAIN_DATASET_ID:str = "train_dataset_id"
     # VAL_DATASET_ID:str = "val_dataset_id"
     # TEST_DATASET_ID:str = "test_dataset_id"
@@ -28,7 +28,7 @@ class WorkConfigKey:
 
 
 @dataclass
-class WorkConfigManager(ConfigManager):
+class Work_PropertyManager(PropertyManager):
     # 데이터 셋 리소스에 대한 config를 관리하는 객체체
     # @cached_property
     # def train_dataset_id(self)->ID:
@@ -45,13 +45,13 @@ class WorkConfigManager(ConfigManager):
 
     @cached_property
     def mmdetection_config_file_path(self)->Path:
-        return self.dir_path/self.config[WorkConfigKey.MMDETECTION_CONFIG_FILE_PATH]
+        return self.dir_path/self.config[Work_PropertyKey.MMDETECTION_CONFIG_FILE_PATH]
 
 
 
 @dataclass
 class WorkRecord(ResourceRecord):
-    config_manager:WorkConfigManager
+    config_manager:Work_PropertyManager
     
     def __post_init__(self):
         self.__task_resource_factory:TaskResourceFactory = TaskResourceFactory(self.dir_path)
@@ -145,9 +145,7 @@ class WorkDB(ResourceDB[WorkRecord]):
         if main_config_file_path is not None:
             shutil.copy(main_config_file_path, self.DEFAULT_CONFIG_FILE_NAME)
         
-        record.config_manager.set_config({
-            WorkConfigKey.MMDETECTION_CONFIG_FILE_PATH:self.DEFAULT_CONFIG_FILE_NAME
-        })
+        record.config_manager.set(Work_PropertyKey.MMDETECTION_CONFIG_FILE_PATH, self.DEFAULT_CONFIG_FILE_NAME)
 
         return record
 
@@ -158,10 +156,10 @@ class WorkDBView(DBView):
 
 
 @dataclass
-class WorkResourceFactory(ResourceDBFactory[WorkConfigManager, WorkRecord, WorkDB, WorkDBView]):
-    dir_path:Path = get_settings().work_dir
+class WorkResourceFactory(ResourceDBFactory[Work_PropertyManager, WorkRecord, WorkDB, WorkDBView]):
+    dir_path:Path = field(default_factory=lambda : get_settings().work_dir)
     
-    CONFIG_MANAGER_CLASS:Type[ConfigManager] = WorkConfigManager
+    CONFIG_MANAGER_CLASS:Type[PropertyManager] = Work_PropertyManager
     RECORD_CLASS:Type[ResourceRecord] = WorkRecord
     DB_CLASS:Type[ResourceDB] = WorkDB
     VIEW_CLASS:Type[WorkDBView] = WorkDBView

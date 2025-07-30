@@ -3,8 +3,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Type
 
-from mmdetection_rm.settings import get_settings
-from rm import ID, NAME, ConfigManager, DBView, ResourceDB, ResourceDBFactory, ResourceRecord
+from mmdet_rm.settings import get_settings
+from rm import ID, NAME, PropertyManager, DBView, ResourceDB, ResourceDBFactory, ResourceRecord
 
 if TYPE_CHECKING:
     from .work_resource import WorkRecord, WorkResourceFactory
@@ -22,7 +22,7 @@ class TaskConfigKey:
     MODEL_ID:str = "model_id"
 
 @dataclass
-class TaskConfigManager(ConfigManager):
+class TaskConfigManager(PropertyManager):
     # 데이터 셋 리소스에 대한 config를 관리하는 객체체
 
     @cached_property
@@ -48,8 +48,8 @@ class TaskConfigManager(ConfigManager):
 
 @dataclass
 class MMDetectionCommand:  
-    train_code_file_path:Path = get_settings().train_code_path
-    test_code_file_path:Path = get_settings().test_code_path
+    train_code_file_path:Path = field(default_factory=lambda : get_settings().train_code_path)
+    test_code_file_path:Path = field(default_factory=lambda : get_settings().test_code_path)
 
     def get_command(self, task_type:Literal["train", "eval", "test"], relative:bool = True)->Path:
         if task_type == "train":
@@ -150,7 +150,7 @@ class TaskDBView(DBView):
 class TaskResourceFactory(ResourceDBFactory[TaskConfigManager, TaskRecord, TaskDB, TaskDBView]):
     dir_path:Path
 
-    CONFIG_MANAGER_CLASS:Type[ConfigManager] = TaskConfigManager
+    CONFIG_MANAGER_CLASS:Type[PropertyManager] = TaskConfigManager
     RECORD_CLASS:Type[ResourceRecord] = TaskRecord
     DB_CLASS:Type[ResourceDB] = TaskDB
     VIEW_CLASS:Type[DBView] = TaskDBView
