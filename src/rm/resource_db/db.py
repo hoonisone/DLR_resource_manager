@@ -31,8 +31,7 @@ class ResourceDB(Generic[RESOURCE_RECORD]):
 
     def get(self, query: ID | NAME) -> RESOURCE_RECORD:
         id, name, dir_path = self.dir_db.get(query)
-        
-        return self.RECORD_CLASS(id, name, dir_path, self.factory.config_manager(dir_path))
+        return self.factory.make_record(id, name, dir_path)
 
     def get_unique_name(self, name:NAME)->NAME:
         i = 1

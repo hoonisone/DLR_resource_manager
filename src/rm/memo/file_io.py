@@ -20,6 +20,7 @@ class FileIO(Protocol):
 
     def create(self, file_path:Path)->None:
         if not file_path.exists():
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.touch()
 
 @dataclass
@@ -53,4 +54,5 @@ class JsonFileIO(FileIO):
 
     def create(self, file_path:Path)->None:
         if not file_path.exists():
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             self.write(file_path, self.make_empty_data())

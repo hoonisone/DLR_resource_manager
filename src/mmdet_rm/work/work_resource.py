@@ -4,6 +4,8 @@ from pathlib import Path
 import shutil
 from typing import Optional, Type
 
+from rm.resource_db.property_manager import PathHandling_PropertyManager
+
 from ..settings import get_settings
 from rm import NAME, PropertyManager, ResourceDB, ResourceDBFactory, ResourceRecord, ID, DBView
 # from resource_manager.dirdb.dirdb import DirDB
@@ -23,12 +25,13 @@ class Work_PropertyKey:
     # PRETRAINED_CHECKPOINT_FILE_PATH:str = "pretrained_checkpoint_file_path"
     pass
     # CONFIG_FILE_PATH:str = "config_file_path"
-    MMDETECTION_CONFIG_FILE_PATH:str = "mmdetection_config_file_path"
+    # MMDETECTION_CONFIG_FILE_PATH:str = "mmdetection_config_file_path"
+    CONFIG_ID:str = "config_id"
 
 
 
 @dataclass
-class Work_PropertyManager(PropertyManager):
+class Work_PropertyManager(PathHandling_PropertyManager):
     # 데이터 셋 리소스에 대한 config를 관리하는 객체체
     # @cached_property
     # def train_dataset_id(self)->ID:
@@ -43,22 +46,30 @@ class Work_PropertyManager(PropertyManager):
     # def config_file_path(self)->Path:
     #     return self.config[WorkConfigKey.CONFIG_FILE_PATH]
 
-    @cached_property
-    def mmdetection_config_file_path(self)->Path:
-        return self.dir_path/self.config[Work_PropertyKey.MMDETECTION_CONFIG_FILE_PATH]
+    # @cached_property
+    # def mmdetection_config_file_path(self)->Path:
+    #     return self.dir_path/self.content[Work_PropertyKey.MMDETECTION_CONFIG_FILE_PATH]
+
+    @property
+    def config_id(self)->ID:
+        return self.get(Work_PropertyKey.CONFIG_ID)
+
+    @config_id.setter
+    def config_id(self, value:ID)->None:
+        self.set(Work_PropertyKey.CONFIG_ID, value)
 
 
 
 @dataclass
-class WorkRecord(ResourceRecord):
-    config_manager:Work_PropertyManager
+class WorkRecord(ResourceRecord[Work_PropertyManager]):
+    # property_manager:Work_PropertyManager
     
     def __post_init__(self):
         self.__task_resource_factory:TaskResourceFactory = TaskResourceFactory(self.dir_path)
 
     @cached_property
     def task_db(self)->TaskDB:
-        return self.__task_resource_factory.resource_db
+        return self.__task_resource_factory.db
 
     @cached_property
     def task_view(self)->TaskDBView:
@@ -76,14 +87,13 @@ class WorkRecord(ResourceRecord):
             raise ValueError(f"Train task already exists: {self.train_task_name}")
         
         task = self.task_db.create(self.train_task_name)
-        task.config_manager.set_config({
-            TaskConfigKey.WORK_ID:self.id,
-            TaskConfigKey.TASK_TYPE:"train",
-            TaskConfigKey.DATASET_ID:train_dataset_id,
-            TaskConfigKey.MODEL_ID:model_id,
-            TaskConfigKey.EPOCH:epoch,
-
-        })
+        
+        pm = task.property_manager
+        pm.work_id = self.id
+        pm.task_type = "train"
+        pm.dataset_id = train_dataset_id
+        pm.model_id = model_id
+        pm.epoch = epoch
 
         return task
 
@@ -135,7 +145,7 @@ class WorkRecord(ResourceRecord):
 class WorkDB(ResourceDB[WorkRecord]):
     DEFAULT_CONFIG_FILE_NAME:str = "main_config.py"
     
-    def create(self, name: NAME, main_config_file_path:Optional[Path] = None) -> WorkRecord:
+    def create(self, name: NAME, main_config_file_path:Optional[Path] = None, config_id:Optional[ID] = None) -> WorkRecord:
         if main_config_file_path is not None:
             if not main_config_file_path.exists():
                 raise FileNotFoundError(f"Main config file not found: {main_config_file_path}")
@@ -145,7 +155,7 @@ class WorkDB(ResourceDB[WorkRecord]):
         if main_config_file_path is not None:
             shutil.copy(main_config_file_path, self.DEFAULT_CONFIG_FILE_NAME)
         
-        record.config_manager.set(Work_PropertyKey.MMDETECTION_CONFIG_FILE_PATH, self.DEFAULT_CONFIG_FILE_NAME)
+        record.property_manager.set(Work_PropertyKey.CONFIG_ID, config_id)
 
         return record
 
@@ -164,7 +174,6 @@ class WorkResourceFactory(ResourceDBFactory[Work_PropertyManager, WorkRecord, Wo
     DB_CLASS:Type[ResourceDB] = WorkDB
     VIEW_CLASS:Type[WorkDBView] = WorkDBView
 
-    CONFIG_NAME:str = field(default="work_config")
 
     def make_task_resource_factory(self)->TaskResourceFactory:
         return TaskResourceFactory(self.dir_path)
@@ -172,7 +181,7 @@ class WorkResourceFactory(ResourceDBFactory[Work_PropertyManager, WorkRecord, Wo
 
 if __name__ == "__main__":
     factory = WorkResourceFactory()
-    db = factory.resource_db
+    db = factory.db
     work = db.create("test")
     # work = db.get("test")
     # print(work)

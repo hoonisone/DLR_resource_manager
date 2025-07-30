@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, Type
 
 from mmdet_rm.settings import get_settings
 from rm import ID, NAME, PropertyManager, DBView, ResourceDB, ResourceDBFactory, ResourceRecord
+from rm.resource_db.property_manager import PathHandling_PropertyManager
 
 if TYPE_CHECKING:
     from .work_resource import WorkRecord, WorkResourceFactory
@@ -20,74 +21,114 @@ class TaskConfigKey:
     DATASET_ID:str = "dataset_id"
     EPOCH:str = "epoch"
     MODEL_ID:str = "model_id"
+    CONFIG_ID:str = "config_id"
 
 @dataclass
-class TaskConfigManager(PropertyManager):
+class TaskConfigManager(PathHandling_PropertyManager):
     # 데이터 셋 리소스에 대한 config를 관리하는 객체체
 
-    @cached_property
+    @property
     def work_id(self)->ID:
-        return self.config[TaskConfigKey.WORK_ID]
+        return self.get(TaskConfigKey.WORK_ID)
 
-    @cached_property
+    @work_id.setter
+    def work_id(self, value:ID)->None:
+        self.set(TaskConfigKey.WORK_ID, value)
+
+    @property
     def task_type(self)->Literal["train", "eval", "test"]:
-        return self.config[TaskConfigKey.TASK_TYPE]
+        return self.get(TaskConfigKey.TASK_TYPE)
 
-    @cached_property
+    @task_type.setter
+    def task_type(self, value:Literal["train", "eval", "test"])->None:
+        self.set(TaskConfigKey.TASK_TYPE, value)
+
+    @property
     def dataset_id(self)->ID:
-        return self.config[TaskConfigKey.DATASET_ID]
+        return self.get(TaskConfigKey.DATASET_ID)
 
-    @cached_property
+    @dataset_id.setter
+    def dataset_id(self, value:ID)->None:
+        self.set(TaskConfigKey.DATASET_ID, value)
+
+    @property
     def model_id(self)->ID:
-        return self.config[TaskConfigKey.MODEL_ID]
+        return self.get(TaskConfigKey.MODEL_ID)
 
-    @cached_property
+    @model_id.setter
+    def model_id(self, value:ID)->None:
+        self.set(TaskConfigKey.MODEL_ID, value)
+
+    @property
     def epoch(self)->int:
-        return self.config[TaskConfigKey.EPOCH]
+        return self.get(TaskConfigKey.EPOCH)
+
+    @epoch.setter
+    def epoch(self, value:int)->None:
+        self.set(TaskConfigKey.EPOCH, value)
+
+
+    ################ 참조해서 가져오는 속성들들
+    @property
+    def config_id(self)->ID:
+        from mmdet_rm.factory import get_root_factory
+        return get_root_factory().work_factory.db.get(self.work_id).property_manager.config_id
+    
+    @config_id.setter
+    def config_id(self, value:ID)->None:
+        raise NotImplementedError("config_id is not settable in task resource")
+
+    @property
+    def mmdet_config_file_path(self)->Path:
+        from mmdet_rm.factory import get_root_factory
+        return get_root_factory().config_factory.db.get(self.config_id).property_manager.config_file_path
+
 
 
 @dataclass
 class MMDetectionCommand:  
-    train_code_file_path:Path = field(default_factory=lambda : get_settings().train_code_path)
-    test_code_file_path:Path = field(default_factory=lambda : get_settings().test_code_path)
+
 
     def get_command(self, task_type:Literal["train", "eval", "test"], relative:bool = True)->Path:
         if task_type == "train":
-            path = self.train_code_file_path
+            path = get_settings().train_code_path
         elif task_type == "eval":
-            path = self.test_code_file_path
+            path = get_settings().test_code_path
         elif task_type == "test":
-            path = self.test_code_file_path
+            path = get_settings().test_code_path
         if relative:
             return path.relative_to(get_settings().project_root)
         else:
             return path
 
 @dataclass
-class TaskRecord(ResourceRecord):
-    config_manager:TaskConfigManager
+class TaskRecord(ResourceRecord[TaskConfigManager]):
+    # config_manager:TaskConfigManager
     
     cammand_file_manager = MMDetectionCommand()
 
-    @cached_property
-    def main_config_file_path(self)->Path:
-        from .work_resource import WorkResourceFactory
-        work_resource_factory:WorkResourceFactory = WorkResourceFactory()
+    # @cached_property
+    # def main_config_file_path(self)->Path:
+    #     from mmdet_rm.factory import get_root_factory
+    #     get_root_factory().config_factory.resource_db.get(self.property_manager.config_id)
 
-        work_record:WorkRecord = work_resource_factory.resource_db.get(self.config_manager.work_id)
-        return work_record.config_manager.mmdetection_config_file_path
+    #     from .work_resource import WorkResourceFactory
+    #     work_resource_factory:WorkResourceFactory = WorkResourceFactory()
+
+    #     work_record:WorkRecord = work_resource_factory.resource_db.get(self.property_manager.work_id)
+    #     return work_record.property_manager.config_file_path
 
     def make_run_command(self, relative:bool = True)->str:
         
-        command_file_path = self.cammand_file_manager.get_command(self.config_manager.task_type, relative=relative)
-        main_config_file_path = self.main_config_file_path
+        command_file_path = self.cammand_file_manager.get_command(self.property_manager.task_type, relative=relative)
+        main_config_file_path = self.property_manager.mmdet_config_file_path
         if relative:
             main_config_file_path = main_config_file_path.relative_to(get_settings().project_root)
 
         options_dict={
             "--cfg-options": {
                 "custom_config":{
-                    TaskConfigKey.WORK_ID:self.config_manager.work_id,
+                    TaskConfigKey.WORK_ID:self.property_manager.work_id,
                     TaskConfigKey.TASK_ID:self.id,
                 }
             }
@@ -98,16 +139,16 @@ class TaskRecord(ResourceRecord):
     def get_dataset_config(self, dataset_id:ID)->tuple[Path, Path]:
         from ..dataset.dataset_resource import DatasetResourceFactory
         dataset_resource_factory:DatasetResourceFactory = DatasetResourceFactory()
-        dataset_record = dataset_resource_factory.resource_db.get(dataset_id)
-        dataset_dir_path = dataset_record.config_manager.dataset_dir_path
-        annotation_file_path = dataset_record.config_manager.annotation_file_path
+        dataset_record = dataset_resource_factory.db.get(dataset_id)
+        dataset_dir_path = dataset_record.property_manager.dataset_dir_path
+        annotation_file_path = dataset_record.property_manager.annotation_file_path
 
         return dataset_dir_path, annotation_file_path
 
     def update_config(self, config):
-        dataset_id = self.config_manager.dataset_id
+        dataset_id = self.property_manager.dataset_id
         # model_id = self.config_manager.model_id
-        epoch = self.config_manager.epoch
+        epoch = self.property_manager.epoch
 
 
         dataset_dir_path, annotation_file_path = self.get_dataset_config(dataset_id)
@@ -158,13 +199,13 @@ class TaskResourceFactory(ResourceDBFactory[TaskConfigManager, TaskRecord, TaskD
 
 
     def make_record(self, id:ID, name:NAME, dir_path:Path)->TaskRecord:
-        return self.RECORD_CLASS(id, name, dir_path, self.config_manager(dir_path))
+        return self.RECORD_CLASS(id, name, dir_path, self.make_config_manager(dir_path))
 
 
 
 if __name__ == "__main__":
     factory = TaskResourceFactory(Path("/home/submodules/mmdetection/resources/works/beverage_train/L10___id_5"))
-    db = factory.resource_db
+    db = factory.db
     
     print(factory.view.table)
     

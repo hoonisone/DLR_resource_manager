@@ -16,6 +16,7 @@ class MMDetection_RM_Settings:
         self.config_dir:Path = self.resource_dir / "configs"
         self.checkpoint_dir:Path = self.resource_dir / "checkpoints"
         self.tensorboard_dir:Path = self.resource_dir / "tensorboard"
+        self.config_dir:Path = self.resource_dir / "configs"
 
         self.train_code_path:Path = self.project_root / "tools/train.py"
         self.test_code_path:Path = self.project_root / "tools/test.py"

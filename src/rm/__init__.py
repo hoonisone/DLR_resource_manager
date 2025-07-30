@@ -6,7 +6,7 @@ Resource Manager Package
 __version__ = "1.0.0"
 __author__ = "Resource Manager Team"
 
-from .resource_db.config_manager import PropertyManager
+from .resource_db.property_manager import PropertyManager
 from .resource_db.db import ResourceDB
 from .resource_db.factory import ResourceDBFactory
 from .resource_db.record import ResourceRecord

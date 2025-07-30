@@ -5,6 +5,7 @@ from typing import Type
 
 from mmdet_rm.settings import get_settings
 from rm import PropertyManager, DBView, ResourceDBFactory, ResourceRecord, ResourceDB, ID, NAME
+from rm.resource_db.property_manager import PathHandling_PropertyManager
 
 @dataclass
 class DatasetConfigKey:
@@ -12,17 +13,24 @@ class DatasetConfigKey:
     ANNOTATION_DIR:str = "annotation_file_path"
 
 @dataclass
-class DatasetConfigManager(PropertyManager):
+class DatasetConfigManager(PathHandling_PropertyManager):
     # 데이터 셋 리소스에 대한 config를 관리하는 객체
 
-    @cached_property
+    @property
     def dataset_dir_path(self)->Path:
-        return self.dir_path / self.config[DatasetConfigKey.DATA_DIR]
+        return self.get_as_absolute_path(DatasetConfigKey.DATA_DIR)
 
+    @dataset_dir_path.setter
+    def dataset_dir_path(self, value:Path)->None:
+        self.set_as_relative_path(DatasetConfigKey.DATA_DIR, value)
 
-    @cached_property
+    @property
     def annotation_file_path(self)->Path:
-        return self.dir_path / self.config[DatasetConfigKey.ANNOTATION_DIR]
+        return self.get_as_absolute_path(DatasetConfigKey.ANNOTATION_DIR)
+
+    @annotation_file_path.setter
+    def annotation_file_path(self, value:Path)->None:
+        self.set_as_relative_path(DatasetConfigKey.ANNOTATION_DIR, value)
 
 
 class DatasetRecord(ResourceRecord[DatasetConfigManager]):
@@ -33,8 +41,9 @@ class DatasetDB(ResourceDB[DatasetRecord]):
     
     def create(self, name:NAME)->DatasetRecord:
         record = super().create(name)
-        record.config_manager.set(DatasetConfigKey.DATA_DIR, (record.dir_path / "data").as_posix())
-        record.config_manager.set(DatasetConfigKey.ANNOTATION_DIR, (record.dir_path / "annotation.json").as_posix())
+        pm = record.property_manager
+        pm.dataset_dir_path = pm.as_absolute_path("data")
+        pm.annotation_file_path = pm.as_absolute_path("annotation.json")
 
         return record
 
@@ -51,14 +60,11 @@ class DatasetResourceFactory(ResourceDBFactory[DatasetConfigManager, DatasetReco
     DB_CLASS:Type[ResourceDB] = DatasetDB
     VIEW_CLASS:Type[DatasetDBView] = DatasetDBView
 
-    CONFIG_NAME:str = field(default="dataset_config")
-
-
 if __name__ == "__main__":
     factory = DatasetResourceFactory()
-    db = factory.resource_db
+    db = factory.db
     record = db.create("bear_v3")
 
-    print(record.config_manager.config)
+    print(record.property_manager.content)
     # print(record.config_manager.dir_path)
     # print(record.config_manager.annotation_file_path)

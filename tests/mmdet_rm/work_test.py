@@ -6,7 +6,7 @@ from mmdet_rm.settings import get_settings
 def test_work_resource_factory():
     settings = get_settings()
     rm_factory = MMDetection_RM_Factory()
-    work_db = rm_factory.work_factory.resource_db
+    work_db = rm_factory.work_factory.db
     work_db.create("test")
     assert work_db.exist("test")
     shutil.rmtree(settings.work_dir)

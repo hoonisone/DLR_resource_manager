@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Generic, TypeVar
 
 from rm.dirdb.dirdb import ID, NAME
-from rm.resource_db.config_manager import PropertyManager
+from rm.resource_db.property_manager import PropertyManager
 
 RESOURCE_CONFIG_MANAGER = TypeVar('CONFIG_MANAGER_CLASS', bound=PropertyManager)
 
@@ -14,7 +14,7 @@ class ResourceRecord(Generic[RESOURCE_CONFIG_MANAGER]):
     id:ID
     name:NAME
     dir_path:Path
-    config_manager:RESOURCE_CONFIG_MANAGER
+    property_manager:RESOURCE_CONFIG_MANAGER
 
 
 
