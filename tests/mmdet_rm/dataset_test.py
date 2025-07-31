@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 import shutil
-from mmdet_rm.dataset.dataset_resource import DatasetPropertyKey, DatasetResourceFactory
-
 
 from mmdet_rm.settings import MMDetection_RM_Settings, get_settings, set_settings
 from mmdet_rm.factory import MMDetection_RM_Factory

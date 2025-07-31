@@ -1,41 +1,25 @@
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import Type
+from typing import Optional, Type
+
+from pydantic import Field, field_serializer
 
 from mmdet_rm.settings import get_settings
 from rm import PropertyManager, DBView, ResourceDBFactory, ResourceRecord, ResourceDB, ID, NAME
 from rm.resource_db.property_manager import PathHandling_PropertyManager
+from rm.resource_db.base_model import AutoSavingModel
 
-@dataclass
-class DatasetPropertyKey:
-    DATA_DIR:str = "data_dir_path"
-    ANNOTATION_DIR:str = "annotation_file_path"
+# 
+class DatasetPropertyManager(AutoSavingModel):
+    dataset_dir_path:Optional[Path] = Field(default=None)
+    annotation_file_path:Optional[Path] = Field(default=None)
 
-@dataclass
-class DatasetPropertyManager(PathHandling_PropertyManager):
-    # 데이터 셋 리소스에 대한 config를 관리하는 객체
-
-    # @property
-    # def refer_id(self, id:ID)->None:
-
-
-    @property
-    def dataset_dir_path(self)->Path:
-        return self.get_as_absolute_path(DatasetPropertyKey.DATA_DIR)
-
-    @dataset_dir_path.setter
-    def dataset_dir_path(self, value:Path)->None:
-        self.set_as_relative_path(DatasetPropertyKey.DATA_DIR, value)
-
-    @property
-    def annotation_file_path(self)->Path:
-        return self.get_as_absolute_path(DatasetPropertyKey.ANNOTATION_DIR)
-
-    @annotation_file_path.setter
-    def annotation_file_path(self, value:Path)->None:
-        self.set_as_relative_path(DatasetPropertyKey.ANNOTATION_DIR, value)
-
+    # @field_serializer("dataset_dir_path", "annotation_file_path")
+    # def serialize_paths(self, path: Optional[Path]) -> str:
+    #     if path is None:
+    #         return None
+    #     return path.as_posix()
 
 class DatasetRecord(ResourceRecord[DatasetPropertyManager]):
     pass
@@ -46,8 +30,8 @@ class DatasetDB(ResourceDB[DatasetRecord]):
     def create(self, name:NAME)->DatasetRecord:
         record = super().create(name)
         pm = record.property_manager
-        pm.dataset_dir_path = pm.as_absolute_path("data")
-        pm.annotation_file_path = pm.as_absolute_path("annotation.json")
+        pm.dataset_dir_path = record.dir_path/Path("data")
+        pm.annotation_file_path = record.dir_path/Path("annotation.json")
 
         return record
 

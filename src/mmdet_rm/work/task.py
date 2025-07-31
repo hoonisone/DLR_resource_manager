@@ -1,10 +1,13 @@
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Type
+from typing import TYPE_CHECKING, Literal, Optional, Type
+
+from pydantic import Field
 
 from mmdet_rm.settings import get_settings
 from rm import ID, NAME, PropertyManager, DBView, ResourceDB, ResourceDBFactory, ResourceRecord
+from rm.resource_db.base_model import AutoSavingModel
 from rm.resource_db.property_manager import PathHandling_PropertyManager
 
 if TYPE_CHECKING:
@@ -13,75 +16,39 @@ if TYPE_CHECKING:
 
 from .command_builder import MMDetectionCommandBuilder
 
-@dataclass
-class TaskConfigKey:
-    WORK_ID:str = "work_id"
-    TASK_ID:str = "task_id"
-    TASK_TYPE:str = "task_type"
-    DATASET_ID:str = "dataset_id"
-    EPOCH:str = "epoch"
-    MODEL_ID:str = "model_id"
-    CONFIG_ID:str = "config_id"
+# @dataclass
+# class TaskConfigKey:
+#     WORK_ID:str = "work_id"
+#     TASK_ID:str = "task_id"
+#     TASK_TYPE:str = "task_type"
+#     DATASET_ID:str = "dataset_id"
+#     EPOCH:str = "epoch"
+#     MODEL_ID:str = "model_id"
+#     CONFIG_ID:str = "config_id"
 
-@dataclass
-class TaskConfigManager(PathHandling_PropertyManager):
+# @dataclass
+class TaskConfigManager(AutoSavingModel):
     # 데이터 셋 리소스에 대한 config를 관리하는 객체체
 
-    @property
-    def work_id(self)->ID:
-        return self.get(TaskConfigKey.WORK_ID)
-
-    @work_id.setter
-    def work_id(self, value:ID)->None:
-        self.set(TaskConfigKey.WORK_ID, value)
-
-    @property
-    def task_type(self)->Literal["train", "eval", "test"]:
-        return self.get(TaskConfigKey.TASK_TYPE)
-
-    @task_type.setter
-    def task_type(self, value:Literal["train", "eval", "test"])->None:
-        self.set(TaskConfigKey.TASK_TYPE, value)
-
-    @property
-    def dataset_id(self)->ID:
-        return self.get(TaskConfigKey.DATASET_ID)
-
-    @dataset_id.setter
-    def dataset_id(self, value:ID)->None:
-        self.set(TaskConfigKey.DATASET_ID, value)
-
-    @property
-    def model_id(self)->ID:
-        return self.get(TaskConfigKey.MODEL_ID)
-
-    @model_id.setter
-    def model_id(self, value:ID)->None:
-        self.set(TaskConfigKey.MODEL_ID, value)
-
-    @property
-    def epoch(self)->int:
-        return self.get(TaskConfigKey.EPOCH)
-
-    @epoch.setter
-    def epoch(self, value:int)->None:
-        self.set(TaskConfigKey.EPOCH, value)
+    work_id:Optional[ID] = Field(default=None)
+    task_type:Optional[Literal["train", "eval", "test"]] = Field(default=None)
+    dataset_id:Optional[ID] = Field(default=None)
+    epoch:Optional[int] = Field(default=None)
+    model_id:Optional[ID] = Field(default=None)
+    # config_id:Optional[ID] = Field(default=None)
 
 
     ################ 참조해서 가져오는 속성들들
+
     @property
     def config_id(self)->ID:
         from mmdet_rm.factory import get_root_factory
         return get_root_factory().work_factory.db.get(self.work_id).property_manager.config_id
     
-    @config_id.setter
-    def config_id(self, value:ID)->None:
-        raise NotImplementedError("config_id is not settable in task resource")
-
     @property
     def mmdet_config_file_path(self)->Path:
         from mmdet_rm.factory import get_root_factory
-        return get_root_factory().config_factory.db.get(self.config_id).property_manager.config_file_path
+        return get_root_factory().config_factory.db.get(self.config_id).property_manager.main_config_file_path
 
 
 
@@ -121,7 +88,7 @@ class TaskRecord(ResourceRecord[TaskConfigManager]):
     def make_run_command(self, relative:bool = True)->str:
         
         command_file_path = self.cammand_file_manager.get_command(self.property_manager.task_type, relative=relative)
-        main_config_file_path = self.property_manager.mmdet_config_file_path
+        main_config_file_path = self.property_manager.get_mmdet_config_file_path()
         if relative:
             main_config_file_path = main_config_file_path.relative_to(get_settings().project_root)
 

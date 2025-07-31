@@ -4,6 +4,7 @@ from pathlib import Path
 from rm.memo.file_io import YamlFileIO
 
 
+
 def test_file_io():
     file_path = Path("test_memo.yaml")
     io = YamlFileIO()
@@ -31,4 +32,6 @@ def test_memo():
 
     memo.remove()
     assert memo.file_path.exists() is False
+
+
 

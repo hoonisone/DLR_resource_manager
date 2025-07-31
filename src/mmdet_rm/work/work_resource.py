@@ -4,59 +4,19 @@ from pathlib import Path
 import shutil
 from typing import Optional, Type
 
+from pydantic import Field
+from pydantic.functional_serializers import field_serializer
+
+from rm.resource_db.base_model import AutoSavingModel
 from rm.resource_db.property_manager import PathHandling_PropertyManager
 
 from ..settings import get_settings
-from rm import NAME, PropertyManager, ResourceDB, ResourceDBFactory, ResourceRecord, ID, DBView
-# from resource_manager.dirdb.dirdb import DirDB
-# from resource_manager.dirdb.factory import DirDBFactory
-# from resource_manager.memo import MemoFactory
-from .task import TaskConfigKey, TaskDB, TaskDBView, TaskResourceFactory, TaskRecord
-# from .command_builder import MMDetectionCommandBuilder
+from rm import NAME, ResourceDB, ResourceDBFactory, ResourceRecord, ID, DBView
+from .task import TaskDB, TaskDBView, TaskResourceFactory, TaskRecord
 
 
-
-
-@dataclass
-class Work_PropertyKey:
-    # TRAIN_DATASET_ID:str = "train_dataset_id"
-    # VAL_DATASET_ID:str = "val_dataset_id"
-    # TEST_DATASET_ID:str = "test_dataset_id"
-    # PRETRAINED_CHECKPOINT_FILE_PATH:str = "pretrained_checkpoint_file_path"
-    pass
-    # CONFIG_FILE_PATH:str = "config_file_path"
-    # MMDETECTION_CONFIG_FILE_PATH:str = "mmdetection_config_file_path"
-    CONFIG_ID:str = "config_id"
-
-
-
-@dataclass
-class Work_PropertyManager(PathHandling_PropertyManager):
-    # 데이터 셋 리소스에 대한 config를 관리하는 객체체
-    # @cached_property
-    # def train_dataset_id(self)->ID:
-    #     return self.config[WorkConfigKey.TRAIN_DATASET_ID]
-
-    # @cached_property
-    # def pretrained_checkpoint_file_path(self)->Path:
-    #     return self.config[WorkConfigKey.PRETRAINED_CHECKPOINT_FILE_PATH]
-
-
-    # @cached_property
-    # def config_file_path(self)->Path:
-    #     return self.config[WorkConfigKey.CONFIG_FILE_PATH]
-
-    # @cached_property
-    # def mmdetection_config_file_path(self)->Path:
-    #     return self.dir_path/self.content[Work_PropertyKey.MMDETECTION_CONFIG_FILE_PATH]
-
-    @property
-    def config_id(self)->ID:
-        return self.get(Work_PropertyKey.CONFIG_ID)
-
-    @config_id.setter
-    def config_id(self, value:ID)->None:
-        self.set(Work_PropertyKey.CONFIG_ID, value)
+class Work_PropertyManager(AutoSavingModel):
+    config_id:Optional[ID] = Field(default=None)
 
 
 
@@ -155,7 +115,7 @@ class WorkDB(ResourceDB[WorkRecord]):
         if main_config_file_path is not None:
             shutil.copy(main_config_file_path, self.DEFAULT_CONFIG_FILE_NAME)
         
-        record.property_manager.set(Work_PropertyKey.CONFIG_ID, config_id)
+        record.property_manager.config_id = config_id
 
         return record
 
@@ -169,7 +129,7 @@ class WorkDBView(DBView):
 class WorkResourceFactory(ResourceDBFactory[Work_PropertyManager, WorkRecord, WorkDB, WorkDBView]):
     dir_path:Path = field(default_factory=lambda : get_settings().work_dir)
     
-    CONFIG_MANAGER_CLASS:Type[PropertyManager] = Work_PropertyManager
+    CONFIG_MANAGER_CLASS:Type[AutoSavingModel] = Work_PropertyManager
     RECORD_CLASS:Type[ResourceRecord] = WorkRecord
     DB_CLASS:Type[ResourceDB] = WorkDB
     VIEW_CLASS:Type[WorkDBView] = WorkDBView

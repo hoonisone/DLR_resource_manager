@@ -1,0 +1,7 @@
+{
+  "model": {
+    "name": "resnet",
+    "layers": 50
+  },
+  "debug": true
+}

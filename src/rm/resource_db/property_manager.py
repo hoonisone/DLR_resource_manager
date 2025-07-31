@@ -1,7 +1,11 @@
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Generic, Type, TypeVar
+
+from pydantic import BaseModel, PrivateAttr
+
+# from rm.resource_db.record import RESOURCE_CONFIG_MANAGER
 
 from ..memo import MemoFactory, FileMemo
 import os
@@ -14,14 +18,14 @@ class PropertyManager:
 
     dir_path:Path
     memo_factory:MemoFactory
-    CONFIG_NAME:str = field(default="config")
+    PROPERTY_NAME:str = field(default="property")
 
     def __post_init__(self):
         self.file_memo:FileMemo = self.memo_factory.make_file_memo(self.memo_file_path)
 
     @cached_property
     def memo_file_path(self)->Path:
-        return self.dir_path / self.CONFIG_NAME
+        return self.dir_path / self.PROPERTY_NAME
 
     # @cached_property
     # def config_memo(self)->FileMemo:
@@ -62,4 +66,5 @@ class PathHandling_PropertyManager(PropertyManager):
 
     def set_as_relative_path(self, key:str, value:Path)->None:
         self.set(key, self.as_relative_path(value).as_posix())
-        
+
+
