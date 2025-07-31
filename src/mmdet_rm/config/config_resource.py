@@ -35,7 +35,7 @@ class ConfigDB(ResourceDB[ConfigRecord]):
     def create(self, name:NAME)->ConfigRecord:
         # 실제로 
         record = super().create(name)
-        record.property_manager.main_config_file_path = record.dir_path / "main_config.py"
+        record.property_manager.main_config_file_path = "main_config.py"
         return record
 
 class ConfigDBView(DBView):

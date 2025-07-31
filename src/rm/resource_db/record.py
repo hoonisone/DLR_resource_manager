@@ -19,4 +19,3 @@ class ResourceRecord(Generic[PROPERTY_MANAGER]):
     property_manager:PROPERTY_MANAGER
 
 
-

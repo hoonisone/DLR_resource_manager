@@ -16,15 +16,15 @@ if TYPE_CHECKING:
 
 from .command_builder import MMDetectionCommandBuilder
 
-# @dataclass
-# class TaskConfigKey:
-#     WORK_ID:str = "work_id"
-#     TASK_ID:str = "task_id"
-#     TASK_TYPE:str = "task_type"
-#     DATASET_ID:str = "dataset_id"
-#     EPOCH:str = "epoch"
-#     MODEL_ID:str = "model_id"
-#     CONFIG_ID:str = "config_id"
+@dataclass
+class TaskKey:
+    WORK_ID:str = "work_id"
+    TASK_ID:str = "task_id"
+    # TASK_TYPE:str = "task_type"
+    # DATASET_ID:str = "dataset_id"
+    # EPOCH:str = "epoch"
+    # MODEL_ID:str = "model_id"
+    # CONFIG_ID:str = "config_id"
 
 # @dataclass
 class TaskConfigManager(AutoSavingModel):
@@ -48,7 +48,9 @@ class TaskConfigManager(AutoSavingModel):
     @property
     def mmdet_config_file_path(self)->Path:
         from mmdet_rm.factory import get_root_factory
-        return get_root_factory().config_factory.db.get(self.config_id).property_manager.main_config_file_path
+        property_manager = get_root_factory().config_factory.db.get(self.config_id).property_manager
+        path  =property_manager.main_config_file_path
+        return property_manager.to_absolute_path(path)
 
 
 
@@ -63,6 +65,7 @@ class MMDetectionCommand:
             path = get_settings().test_code_path
         elif task_type == "test":
             path = get_settings().test_code_path
+        
         if relative:
             return path.relative_to(get_settings().project_root)
         else:
@@ -88,15 +91,15 @@ class TaskRecord(ResourceRecord[TaskConfigManager]):
     def make_run_command(self, relative:bool = True)->str:
         
         command_file_path = self.cammand_file_manager.get_command(self.property_manager.task_type, relative=relative)
-        main_config_file_path = self.property_manager.get_mmdet_config_file_path()
+        main_config_file_path = self.property_manager.mmdet_config_file_path
         if relative:
             main_config_file_path = main_config_file_path.relative_to(get_settings().project_root)
 
         options_dict={
             "--cfg-options": {
                 "custom_config":{
-                    TaskConfigKey.WORK_ID:self.property_manager.work_id,
-                    TaskConfigKey.TASK_ID:self.id,
+                    TaskKey.WORK_ID:self.property_manager.work_id,
+                    TaskKey.TASK_ID:self.id,
                 }
             }
         }
@@ -107,8 +110,10 @@ class TaskRecord(ResourceRecord[TaskConfigManager]):
         from ..dataset.dataset_resource import DatasetResourceFactory
         dataset_resource_factory:DatasetResourceFactory = DatasetResourceFactory()
         dataset_record = dataset_resource_factory.db.get(dataset_id)
-        dataset_dir_path = dataset_record.property_manager.dataset_dir_path
-        annotation_file_path = dataset_record.property_manager.annotation_file_path
+        rpm = dataset_record.property_manager.refered_property_manager
+
+        dataset_dir_path = rpm.dataset_dir_absolute_path
+        annotation_file_path = rpm.annotation_file_absolute_path
 
         return dataset_dir_path, annotation_file_path
 

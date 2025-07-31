@@ -24,6 +24,24 @@ def remove_resource_dir():
 
 #     remove_resource_dir()
     
+
+def test_refer_dataset_resource():
+    rm_factory = MMDetection_RM_Factory()
+    dataset_factory = rm_factory.dataset_factory
+    dataset_db = dataset_factory.db
+
+    record = dataset_db.create("base")
+    record.property_manager.dataset_dir_path = "data"
+    record.property_manager.annotation_file_path = "annotation.json"
+    refer_id = record.id
+
+    refer_record = dataset_db.create("main")
+    refer_record.property_manager.refer_id = refer_id
+    assert refer_record.property_manager.refered_property_manager.dataset_dir_absolute_path == record.dir_path/'data'
+
+    remove_resource_dir()
+
+
 def test_dataset_resource_factory():
     rm_factory = MMDetection_RM_Factory()
     dataset_factory = rm_factory.dataset_factory

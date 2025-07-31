@@ -1,3 +1,8 @@
+## [0.1.4] - 2025-07-31
+### Update
+- pydantic based property manager is applied
+
+
 ## [0.1.4] - 2025-07-29
 ### Update
 - config resource is added in mmdet_rm
