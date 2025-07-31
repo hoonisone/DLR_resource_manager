@@ -1,14 +1,32 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 import shutil
-from mmdet_rm.dataset.dataset_resource import DatasetConfigKey, DatasetResourceFactory
+from mmdet_rm.dataset.dataset_resource import DatasetPropertyKey, DatasetResourceFactory
 
 
 from mmdet_rm.settings import MMDetection_RM_Settings, get_settings, set_settings
 from mmdet_rm.factory import MMDetection_RM_Factory
 
-def test_dataset_resource_factory():
+
+def remove_resource_dir():
     settings = get_settings()
+    shutil.rmtree(settings.resource_dir)
+
+# def test_dataset_resource_refer_config_test():
+#     # 데이터셋 리소스에서 레퍼 설정이 잘 되는가?
+#     dataset_factory = DatasetResourceFactory()
+#     dataset_db = dataset_factory.db
+
+#     record = dataset_db.create("test")
+#     record.property_manager.dataset_dir_path = record.dir_path / "data"
+#     record.property_manager.annotation_file_path = record.dir_path / "annotation.json"
+
+#     assert record.property_manager.dataset_dir_path == record.dir_path / "data"
+#     assert record.property_manager.annotation_file_path == record.dir_path / "annotation.json"
+
+#     remove_resource_dir()
+    
+def test_dataset_resource_factory():
     rm_factory = MMDetection_RM_Factory()
     dataset_factory = rm_factory.dataset_factory
     dataset_db = dataset_factory.db
@@ -26,7 +44,7 @@ def test_dataset_resource_factory():
 
 
 
-    shutil.rmtree(settings.dataset_dir)
+    remove_resource_dir()
 
 
 

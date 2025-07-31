@@ -17,7 +17,7 @@ class PropertyManager:
     CONFIG_NAME:str = field(default="config")
 
     def __post_init__(self):
-        self.file_memo:FileMemo = self.memo_factory.make_file_json_file_memo(self.memo_file_path)
+        self.file_memo:FileMemo = self.memo_factory.make_file_memo(self.memo_file_path)
 
     @cached_property
     def memo_file_path(self)->Path:

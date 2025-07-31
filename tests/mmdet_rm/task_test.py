@@ -12,7 +12,7 @@ from mmdet_rm.settings import get_settings
 
 def test_task_record():
     
-    shutil.rmtree(get_settings().resource_dir)
+    # shutil.rmtree(get_settings().resource_dir)
 
     dataset_record:DatasetRecord = get_root_factory().dataset_factory.db.create("test_dataset")
     dataset_record.property_manager.annotation_file_path =  dataset_record.property_manager.dir_path/Path("annotation.json")

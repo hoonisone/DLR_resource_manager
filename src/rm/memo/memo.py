@@ -34,7 +34,7 @@ class FileMemo(Memo):
 
     file_path:Path
     file_io:FileIO
-    content: CONTENT_TYPE
+    # content: CONTENT_TYPE
 
     def __post_init__(self):
         if not self.file_path.exists():       

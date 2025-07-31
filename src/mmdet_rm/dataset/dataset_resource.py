@@ -8,32 +8,36 @@ from rm import PropertyManager, DBView, ResourceDBFactory, ResourceRecord, Resou
 from rm.resource_db.property_manager import PathHandling_PropertyManager
 
 @dataclass
-class DatasetConfigKey:
+class DatasetPropertyKey:
     DATA_DIR:str = "data_dir_path"
     ANNOTATION_DIR:str = "annotation_file_path"
 
 @dataclass
-class DatasetConfigManager(PathHandling_PropertyManager):
+class DatasetPropertyManager(PathHandling_PropertyManager):
     # 데이터 셋 리소스에 대한 config를 관리하는 객체
+
+    # @property
+    # def refer_id(self, id:ID)->None:
+
 
     @property
     def dataset_dir_path(self)->Path:
-        return self.get_as_absolute_path(DatasetConfigKey.DATA_DIR)
+        return self.get_as_absolute_path(DatasetPropertyKey.DATA_DIR)
 
     @dataset_dir_path.setter
     def dataset_dir_path(self, value:Path)->None:
-        self.set_as_relative_path(DatasetConfigKey.DATA_DIR, value)
+        self.set_as_relative_path(DatasetPropertyKey.DATA_DIR, value)
 
     @property
     def annotation_file_path(self)->Path:
-        return self.get_as_absolute_path(DatasetConfigKey.ANNOTATION_DIR)
+        return self.get_as_absolute_path(DatasetPropertyKey.ANNOTATION_DIR)
 
     @annotation_file_path.setter
     def annotation_file_path(self, value:Path)->None:
-        self.set_as_relative_path(DatasetConfigKey.ANNOTATION_DIR, value)
+        self.set_as_relative_path(DatasetPropertyKey.ANNOTATION_DIR, value)
 
 
-class DatasetRecord(ResourceRecord[DatasetConfigManager]):
+class DatasetRecord(ResourceRecord[DatasetPropertyManager]):
     pass
 
 
@@ -52,10 +56,10 @@ class DatasetDBView(DBView):
 
 
 @dataclass
-class DatasetResourceFactory(ResourceDBFactory[DatasetConfigManager, DatasetRecord, DatasetDB, DatasetDBView]):
+class DatasetResourceFactory(ResourceDBFactory[DatasetPropertyManager, DatasetRecord, DatasetDB, DatasetDBView]):
     dir_path:Path = field(default_factory=lambda : get_settings().dataset_dir)
     
-    CONFIG_MANAGER_CLASS:Type[PropertyManager] = DatasetConfigManager
+    CONFIG_MANAGER_CLASS:Type[PropertyManager] = DatasetPropertyManager
     RECORD_CLASS:Type[ResourceRecord] = DatasetRecord
     DB_CLASS:Type[ResourceDB] = DatasetDB
     VIEW_CLASS:Type[DatasetDBView] = DatasetDBView

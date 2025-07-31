@@ -23,8 +23,17 @@ class FileIO(Protocol):
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.touch()
 
+class DictFileIO(FileIO):
+    def make_empty_data(self)->Any:
+        return {}
+
+    def create(self, file_path:Path)->None:
+        if not file_path.exists():
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            self.write(file_path, self.make_empty_data())
+
 @dataclass
-class YamlFileIO(FileIO):
+class YamlFileIO(DictFileIO):
     encoding:str = "utf-8-sig"
     
     def write(self, file_path:Path, data:CONTENT_TYPE)->None:
@@ -33,12 +42,12 @@ class YamlFileIO(FileIO):
         
     def read(self, file_path:Path):
         with open(file_path, 'r', encoding=self.encoding) as f:
-            return yaml.safe_load(f)
+            return yaml.safe_load(f) or {}
 
 
 
 @dataclass
-class JsonFileIO(FileIO):
+class JsonFileIO(DictFileIO):
     encoding:str = "utf-8-sig"
     
     def write(self, file_path:Path, data:Any)->None:
@@ -49,10 +58,10 @@ class JsonFileIO(FileIO):
         with open(file_path, 'r', encoding=self.encoding) as f:
             return json.load(f)
 
-    def make_empty_data(self)->Any:
-        return {}
+    # def make_empty_data(self)->Any:
+    #     return {}
 
-    def create(self, file_path:Path)->None:
-        if not file_path.exists():
-            file_path.parent.mkdir(parents=True, exist_ok=True)
-            self.write(file_path, self.make_empty_data())
+    # def create(self, file_path:Path)->None:
+    #     if not file_path.exists():
+    #         file_path.parent.mkdir(parents=True, exist_ok=True)
+    #         self.write(file_path, self.make_empty_data())
