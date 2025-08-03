@@ -1,6 +1,6 @@
 from functools import cached_property
 
-from mmdet_rm.config.config_resource import MainConfig_ResourceFactory
+from mmdet_rm.config.config_resource import Config_ResourceFactory
 from mmdet_rm.dataset.dataset_resource import DatasetResourceFactory
 from mmdet_rm.work.work_resource import WorkResourceFactory
 
@@ -14,8 +14,8 @@ class MMDetection_RM_Factory:
         return WorkResourceFactory()
         
     @cached_property
-    def config_factory(self)->MainConfig_ResourceFactory:
-        return MainConfig_ResourceFactory()
+    def config_factory(self)->Config_ResourceFactory:
+        return Config_ResourceFactory()
 
 root_factory = MMDetection_RM_Factory()
 

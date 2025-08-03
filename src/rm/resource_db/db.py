@@ -52,4 +52,4 @@ class ResourceDB(Generic[RESOURCE_RECORD]):
     
     def exist(self, query: ID | NAME)->bool:
         return self.dir_db.exist(query)
-        
+    

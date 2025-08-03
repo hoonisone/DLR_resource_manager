@@ -1,57 +1,48 @@
 from functools import cached_property
 from pathlib import Path, PurePath
 from typing import Type
-from .dir_tree import DirTree, TerminalCheker
-from .name_id_manager import Name_ID_Manager, Linked_Name_ID_Manager, Name_ID_Parser
+
+from rm.dirtree.file_name_id_manager import File_Name_ID_Manager, File_Name_ID_Parser, Linked_File_Name_ID_Manager
+from .dir_tree import DirTree, FileTree, TerminalCheker
+from .dir_name_id_manager import DIR_Name_ID_Manager, Linked_Name_ID_Manager, Dir_Name_ID_Parser
 
 
 class DirTreeFactory:
 
 
     @cached_property
-    def name_id_parser(self)->Name_ID_Parser:
-        return Name_ID_Parser()
-
-    def id_name_manager(self, path:PurePath)->Name_ID_Manager:
-        return Name_ID_Manager(path, self.name_id_parser)
-
-    def linked_id_name_manager(self, path:Path)->Linked_Name_ID_Manager:
-        return Linked_Name_ID_Manager(path, self.name_id_parser)
+    def dir_name_id_parser(self)->Dir_Name_ID_Parser:
+        return Dir_Name_ID_Parser()
 
     @cached_property
-    def has_id(self)->TerminalCheker:
-        f = self.name_id_parser.split
+    def file_name_id_parser(self)->File_Name_ID_Parser:
+        return File_Name_ID_Parser()
+
+    def dir_id_name_manager(self, path:PurePath)->DIR_Name_ID_Manager:
+        return DIR_Name_ID_Manager(path, self.dir_name_id_parser)
+
+    def file_id_name_manager(self, path:PurePath)->File_Name_ID_Manager:
+        return File_Name_ID_Manager(path, self.file_name_id_parser)
+
+    def dir_linked_id_name_manager(self, path:Path)->Linked_Name_ID_Manager:
+        return Linked_Name_ID_Manager(self.dir_id_name_manager(path))
+        # return Linked_Name_ID_Manager(path, self.dir_name_id_parser)
+
+    def file_linked_id_name_manager(self, path:Path)->Linked_File_Name_ID_Manager:
+        return Linked_File_Name_ID_Manager(self.file_id_name_manager(path))
+
+    @cached_property
+    def dir_terminal_checker(self)->TerminalCheker:
+        f = self.dir_name_id_parser.split
+        return lambda path : f(path)[0] is not None
+
+    @cached_property
+    def file_terminal_checker(self)->TerminalCheker:
+        f = self.file_name_id_parser.split
         return lambda path : f(path)[0] is not None
 
     def get_dir_tree(self, dir_path:Path)->DirTree:
-        return DirTree(dir_path, self.has_id)
+        return DirTree(dir_path, self.dir_terminal_checker)
 
-if __name__ == "__main__":
-    factory = DirTreeFactory()
-    parser = factory.name_id_parser
-    assert parser.merge(1, "test") == Path("test___id_1")
-    assert parser.split(Path("test___id_1")) == (1, "test")
-    assert parser.split(Path("test___id_1/test___id_20")) == (20, "test___id_1/test")
-
-
-    assert factory.id_name_manager(Path("test___id_1")).id == 1
-    assert factory.id_name_manager(Path("test___id_1")).name == "test"
-    assert factory.id_name_manager(Path("test___id_1")).path == Path("test___id_1")
-    assert factory.id_name_manager(Path("test")).id is None
-    assert factory.id_name_manager(Path("test")).name == "test"
-
-    assert factory.linked_id_name_manager(Path("test___id_1")).id == 1
-    assert factory.linked_id_name_manager(Path("test___id_1")).name == "test"
-    assert factory.linked_id_name_manager(Path("test___id_1")).path == Path("test___id_1")
-    assert factory.linked_id_name_manager(Path("test/aaa/bbb")).exists is False
-    factory.linked_id_name_manager(Path("test/aaa/bbb")).create()
-    assert factory.linked_id_name_manager(Path("test/aaa/bbb")).exists is True
-    factory.linked_id_name_manager(Path("test/aaa/bbb")).id = 1
-    assert factory.linked_id_name_manager(Path("test/aaa/bbb")).id == 1
-    assert factory.linked_id_name_manager(Path("test/aaa/bbb")).name == "test/aaa/bbb"
-    factory.linked_id_name_manager(Path("test/aaa/bbb")).remove()
-    assert factory.linked_id_name_manager(Path("test/aaa/bbb")).exists is False
-
-    tree = factory.get_dir_tree(Path("aaa"))
-    print(tree.all_violating_paths)
-    
+    def get_file_tree(self, file_path:Path)->FileTree:
+        return FileTree(file_path, self.file_terminal_checker)

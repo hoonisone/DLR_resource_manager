@@ -48,9 +48,8 @@ class TaskConfigManager(AutoSavingModel):
     @property
     def mmdet_config_file_path(self)->Path:
         from mmdet_rm.factory import get_root_factory
-        property_manager = get_root_factory().config_factory.db.get(self.config_id).property_manager
-        path  =property_manager.main_config_file_path
-        return property_manager.to_absolute_path(path)
+        config_record = get_root_factory().config_factory.db.get(self.config_id)
+        return config_record.file_path
 
 
 

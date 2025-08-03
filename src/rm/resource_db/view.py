@@ -1,13 +1,15 @@
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Dict
+from typing import Dict, Generic, TypeVar
 
 from .db import ID, NAME, ResourceDB
 import pandas as pd
 
+RESOURCE_DB = TypeVar('RESOURCE_DB', bound=ResourceDB)
+
 @dataclass
-class DBView:
-    db:ResourceDB
+class DBView(Generic[RESOURCE_DB]):
+    db:RESOURCE_DB
 
     # @cached_property
     @property

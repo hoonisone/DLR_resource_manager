@@ -81,7 +81,7 @@ def test_dataset_resource_factory_with_custom_settings():
 
     rm_factory = MMDetection_RM_Factory()
 
-    assert rm_factory.dataset_factory.db.dir_db.dir_path == new_setting.dataset_dir    
+    assert rm_factory.dataset_factory.db.dir_db.path == new_setting.dataset_dir    
 
     set_settings(origin_setting)
 

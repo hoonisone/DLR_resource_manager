@@ -99,13 +99,13 @@ class MetaData:
 
     @property
     def last_id(self)->int:
-        return self.meta_data.get('last_id', 0)
+        return self.meta_data.get('last_id', -1)
         
     @last_id.setter
     def last_id(self, value: int):
         self.meta_data.set('last_id', value)
     
     def get_next_id_increasing_1(self)->int:
-        id = self.last_id
         self.last_id += 1
+        id = self.last_id
         return id

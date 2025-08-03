@@ -3,12 +3,12 @@ from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path, PurePath
 from typing import Callable
-
+from abc import ABC, abstractmethod
 
 TerminalCheker = Callable[[PurePath], bool]
 
 @dataclass
-class DirTree:
+class TreeDB(ABC):
     path: Path
     terminal_checker: TerminalCheker
     depth: int = 0
@@ -38,33 +38,10 @@ class DirTree:
         return self.depth == 0
 
 
+    @abstractmethod
     def _find_children(self)->tuple[List['DirTree'], List[Path]]:
-        children: List[DirTree] = []
-        violating_paths: List[Path] = []
-        
-        if (self.is_root) or (not self.is_terminal):
-            
-            # dir path를 구하며 file인 path는 룰 위반 경로로 수집
-            sub_dir_paths: List[Path] = []
-            for sub_path in self.path.iterdir():
-                if sub_path.is_dir():
-                    sub_dir_paths.append(sub_path)
-                else:
-                    violating_paths.append(sub_path)
-                    
-            # dir_path 정렬
-            sub_dir_paths.sort()
+        pass
 
-            
-            # 하위 트리를 생성하며 룰 위반 경로 수집
-            for sub_dir_path in sub_dir_paths:
-                sub_tree = DirTree(sub_dir_path, self.terminal_checker, self.depth + 1)
-                if sub_tree.is_terminal or sub_tree.is_path_node:
-                    children.append(sub_tree)
-                else:
-                    violating_paths.append(sub_dir_path)
-                    
-        return children, violating_paths
     
     @cached_property
     def terminal_nodes(self):
@@ -90,3 +67,63 @@ class DirTree:
                 all_violationg_paths.extend(child.all_violating_paths)
         return all_violationg_paths
 
+@dataclass
+class DirTree(TreeDB):
+
+    def _find_children(self)->tuple[List['DirTree'], List[Path]]:
+        children: List[DirTree] = []
+        violating_paths: List[Path] = []
+        
+        if (self.is_root) or (not self.is_terminal):
+            
+            # dir path를 구하며 file인 path는 룰 위반 경로로 수집
+            sub_dir_paths: List[Path] = []
+            for sub_path in self.path.iterdir():
+                if sub_path.is_dir():
+                    sub_dir_paths.append(sub_path)
+                else:
+                    violating_paths.append(sub_path)
+
+                    
+            # dir_path 정렬
+            sub_dir_paths.sort()
+
+            
+            # 하위 트리를 생성하며 룰 위반 경로 수집
+            for sub_dir_path in sub_dir_paths:
+                sub_tree = DirTree(sub_dir_path, self.terminal_checker, self.depth + 1)
+                if sub_tree.is_terminal or sub_tree.is_path_node:
+                    children.append(sub_tree)
+                else:
+                    violating_paths.append(sub_dir_path)
+                    
+        return children, violating_paths
+
+
+@dataclass
+class FileTree(TreeDB):            
+    
+    def _find_children(self)->tuple[List['DirTree'], List[Path]]:
+        children: List[DirTree] = []
+        violating_paths: List[Path] = []
+        
+        if (self.is_root) or (not self.is_terminal):
+            
+            if self.path.is_file():
+                return [], []
+
+            sub_dir_paths = list(self.path.iterdir())
+                    
+            # dir_path 정렬
+            sub_dir_paths.sort()
+
+            
+            # 하위 트리를 생성하며 룰 위반 경로 수집
+            for sub_dir_path in sub_dir_paths:
+                sub_tree = FileTree(sub_dir_path, self.terminal_checker, self.depth + 1)
+                if sub_tree.is_terminal or sub_tree.is_path_node:
+                    children.append(sub_tree)
+                else:
+                    violating_paths.append(sub_dir_path)
+                    
+        return children, violating_paths

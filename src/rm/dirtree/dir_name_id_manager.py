@@ -1,17 +1,27 @@
 import re
 from pathlib import PurePath, Path
 import shutil
-from typing import Callable, Generic, Optional, Type
+from typing import Callable, Generic, Optional, Protocol, Type
 from dataclasses import dataclass, field
 from typing import TypeVar
+
+from rm.tool import FileSystemManager
+from rm.wrapper_tool import Wrapper
 
 ID = Optional[int]
 NAME = str
 
 PATH = TypeVar('PATH', bound=PurePath)
 
+
+class Name_ID_Parser(Protocol):
+    def split(self, path:PurePath)->tuple[ID, NAME]:
+        ...
+    def merge(self, id:ID, name:NAME)->PurePath:
+        ...
+
 @dataclass
-class Name_ID_Parser():
+class Dir_Name_ID_Parser(Name_ID_Parser):
     # path로 부터 id와 name 추출
     ID_PATTERN: str = field(default=r'___id_(\d+)$')
 
@@ -31,37 +41,21 @@ class Name_ID_Parser():
             return PurePath(f"{name}___id_{id}")
 
 
-
-class FileSystemManager:        
-    @classmethod
-    def is_empty(cls, path:Path)->bool:        
-        return not any(path.iterdir())
-    
-    @classmethod
-    def remove_empty_parents_recursively(cls, path:Path):
-        parents = list(path.parents)
-        for parent in parents[:-1]:
-            if cls.is_empty(parent):
-                shutil.rmtree(parent)
-            else:
-                break
-    
-    @classmethod
-    def remove_dir(cls, path:Path):
-        shutil.rmtree(path)
-
-if __name__ == "__main__":
-    parser = Name_ID_Parser(ID_PATTERN = r'___id_(\d+)$')
-    assert parser.merge(1, "test") == Path("test___id_1")
-    assert parser.split(Path("test___id_1")) == (1, "test")
-    assert parser.split(Path("test___id_1/test___id_20")) == (20, "test___id_1/test")
-    del parser
+class Name_ID_Manager(Protocol):
+    def id_name(self)->tuple[ID, NAME]:
+        ...
+    def id(self)->ID:
+        ...
+    def name(self)->NAME:
+        ...
+    def path(self)->PurePath:
+        ...
 
 
-class Name_ID_Manager:
+class DIR_Name_ID_Manager(Name_ID_Manager):
     # path를 관리하며 id와 name 계산 및 조작
 
-    def __init__(self, path:PurePath, parser: Name_ID_Parser):
+    def __init__(self, path:PurePath, parser: Dir_Name_ID_Parser):
         self.parser = parser
         self._id: ID = None
         self._name: NAME = ""
@@ -91,7 +85,7 @@ class Name_ID_Manager:
     @id.setter
     def id(self, id:ID):
         if id is None:
-            raise ValueError("For assign id, id bust not be None. But it is None.")
+            raise ValueError("For assign id, id must not be None. But it is None.")
         self._id = id
 
     @name.setter
@@ -107,29 +101,15 @@ class Name_ID_Manager:
         self._id = id
         self._name = name
 
-if __name__ == "__main__":
-    parser = Name_ID_Parser(ID_PATTERN = r'___id_(\d+)$')
-    assert Name_ID_Manager(Path("test___id_1"), parser).id == 1
-    assert Name_ID_Manager(Path("test___id_1"), parser).name == "test"
-    assert Name_ID_Manager(Path("test___id_1"), parser).path == Path("test___id_1")
-    assert Name_ID_Manager(Path("test"), parser).id is None
-    assert Name_ID_Manager(Path("test"), parser).name == "test"
-    del parser
-    
-class Linked_Name_ID_Manager(Name_ID_Manager):
+class Linked_Name_ID_Manager(Wrapper[Name_ID_Manager]):
     # 실제 폴더에 연결되어 경로로 조작 가능
     @property
     def path(self)->Path:
-        return Path(super().path)
+        return Path(self.inner_obj.path)
 
     @path.setter
     def path(self, path: Path):
-        Name_ID_Manager.path.fset(self, path)
-        # super(Linked_ID_Name_Manager, Linked_ID_Name_Manager).path.__set__(self, path)
-
-    @property
-    def exists(self)->bool:
-        return self.path.exists() # type: ignore
+        self.inner_obj.path = PurePath(path)
 
     def _rename(self, callback:Callable[[], None])->None:
         old_path = self.path
@@ -141,24 +121,24 @@ class Linked_Name_ID_Manager(Name_ID_Manager):
     
     @property
     def id(self)->ID:
-        return self._id
+        return self.inner_obj.id
 
     @id.setter
     def id(self, id:ID):
         if id is None:
             raise ValueError("For assign id, id bust not be None. But it is None.")
         def callback():
-            self._id = id
+            self.inner_obj.id = id
         self._rename(callback)
 
     @property
     def name(self)->NAME:
-        return self._name
+        return self.inner_obj.name
 
     @name.setter
     def name(self, name:NAME):
         def callback():
-            self._name = name
+            self.inner_obj.name = name
         self._rename(callback)
 
     def remove(self)->None:
@@ -168,3 +148,63 @@ class Linked_Name_ID_Manager(Name_ID_Manager):
             
     def create(self)->None:
         self.path.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def exists(self)->bool:
+        return self.path.exists() # type: ignore
+
+    
+# class Linked_Name_ID_Manager(DIR_Name_ID_Manager):
+#     # 실제 폴더에 연결되어 경로로 조작 가능
+#     @property
+#     def path(self)->Path:
+#         return Path(super().path)
+
+#     @path.setter
+#     def path(self, path: Path):
+#         DIR_Name_ID_Manager.path.fset(self, path)
+#         # super(Linked_ID_Name_Manager, Linked_ID_Name_Manager).path.__set__(self, path)
+
+#     @property
+#     def exists(self)->bool:
+#         return self.path.exists() # type: ignore
+
+#     def _rename(self, callback:Callable[[], None])->None:
+#         old_path = self.path
+#         callback()
+#         new_path = self.path
+#         if old_path != new_path:
+#             old_path.rename(new_path)
+#             FileSystemManager.remove_empty_parents_recursively(old_path)
+    
+#     @property
+#     def id(self)->ID:
+#         return self._id
+
+#     @id.setter
+#     def id(self, id:ID):
+#         if id is None:
+#             raise ValueError("For assign id, id bust not be None. But it is None.")
+#         def callback():
+#             self._id = id
+#         self._rename(callback)
+
+#     @property
+#     def name(self)->NAME:
+#         return self._name
+
+#     @name.setter
+#     def name(self, name:NAME):
+#         def callback():
+#             self._name = name
+#         self._rename(callback)
+
+#     def remove(self)->None:
+#         if self.exists:
+#             FileSystemManager.remove_dir(self.path)
+#             FileSystemManager.remove_empty_parents_recursively(self.path)
+            
+#     def create(self)->None:
+#         self.path.mkdir(parents=True, exist_ok=True)
+
+

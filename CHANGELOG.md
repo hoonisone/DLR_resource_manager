@@ -1,4 +1,18 @@
-## [0.1.4] - 2025-07-31
+## [0.1.18] - 2025-08-01
+### Update
+- omegaconf based -> mmengine config based
+
+
+## [0.1.17] - 2025-08-01
+### Update
+- omegaconf based config db, capable of merge with base id
+
+
+## [0.1.16] - 2025-07-31
+### Update
+- referancible property manager
+
+## [0.1.10] - 2025-07-31
 ### Update
 - pydantic based property manager is applied
 

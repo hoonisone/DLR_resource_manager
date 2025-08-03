@@ -4,7 +4,7 @@ from pathlib import Path
 
 def test_name_id_parser():
     factory = DirTreeFactory()
-    parser = factory.name_id_parser
+    parser = factory.dir_name_id_parser
     assert parser.merge(1, "test") == Path("test___id_1")
     assert parser.split(Path("test___id_1")) == (1, "test")
     assert parser.split(Path("test___id_1/test___id_20")) == (20, "test___id_1/test")
@@ -13,14 +13,14 @@ def test_name_id_manager():
     factory = DirTreeFactory()
 
     # split 기능 확인 (id가 없는 경우 )
-    manager = factory.id_name_manager(Path("test"))
+    manager = factory.dir_id_name_manager(Path("test"))
     assert manager.id is None
     assert manager.name == "test"
     assert manager.path == Path("test")
 
 
     # split 기능 확인 (id가 배정 된 경우)
-    manager = factory.id_name_manager(Path("test___id_1"))
+    manager = factory.dir_id_name_manager(Path("test___id_1"))
     assert manager.id == 1
     assert manager.name == "test"
     assert manager.path == Path("test___id_1")
@@ -39,7 +39,7 @@ def test_name_id_manager():
 def test_linked_name_id_manager():
     factory = DirTreeFactory()
     
-    manager = factory.linked_id_name_manager(Path("test/aaa/bbb"))
+    manager = factory.dir_linked_id_name_manager(Path("test/aaa/bbb"))
     assert manager.exists is False
     manager.create()
     assert manager.exists is True

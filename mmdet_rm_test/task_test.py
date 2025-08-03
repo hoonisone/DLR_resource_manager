@@ -1,5 +1,3 @@
-
-
 from pathlib import Path
 import shutil
 from mmdet_rm.config.config_resource import ConfigRecord
@@ -18,7 +16,7 @@ def test_task_record():
     dataset_record.property_manager.annotation_file_path =  dataset_record.dir_path/Path("annotation.json")
 
     config_record:ConfigRecord = get_root_factory().config_factory.db.create("test_config")
-    config_record.property_manager.main_config_file_path = config_record.dir_path/Path("config.py")
+    # config_record.file_path
     
 
     work_record:WorkRecord = get_root_factory().work_factory.db.create("test_work")
@@ -31,7 +29,7 @@ def test_task_record():
     assert task_record.property_manager.dataset_id == dataset_record.id
     assert task_record.property_manager.epoch == 10
     assert task_record.property_manager.task_type == "train"
-    assert task_record.property_manager.mmdet_config_file_path == config_record.property_manager.main_config_file_path
+    assert task_record.property_manager.mmdet_config_file_path == config_record.file_path
 
 
     shutil.rmtree(get_settings().resource_dir)

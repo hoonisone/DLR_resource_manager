@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "pytest: current file",
+        "type": "python",
+        "request": "launch",
+        "module": "pytest",
+        "justMyCode": false,
+        "console": "integratedTerminal",
+        "args": [
+          "tests/rm/tree/path_tree_test.py"  // ← 네 파일 경로로 수정
+        ]
+      }
+    ]
+  }

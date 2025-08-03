@@ -5,7 +5,7 @@ import yaml
 import pandas as pd
 import json
 from dataclasses import dataclass
-from typing import ClassVar, Any, List
+from typing import ClassVar, Any, Generic, List, TypeVar, cast
 from typing import Callable
 from abc import ABC
 
@@ -25,6 +25,16 @@ class Memo(ABC):
     def create(self):
         raise NotImplementedError("Not Implemented")
 
+class HookManager:
+    def __init__(self):
+        self._hooks = {}
+
+    def register(self, event_name: str, func):
+        self._hooks.setdefault(event_name, []).append(func)
+
+    def trigger(self, event_name: str, *args, **kwargs):
+        for func in self._hooks.get(event_name, []):
+            func(*args, **kwargs)
 
 
 @dataclass
@@ -52,7 +62,25 @@ class FileMemo(Memo):
         self.content = None
         if self.file_path.exists():
             self.file_io.remove(self.file_path)
-    
+
+@dataclass
+class FileMemoHookName:
+    AFTER_LOAD_FILE:str = "after_load_file"
+    BEFORE_SAVE_FILE:str = "before_save_file"
+
+
+# INNER_TYPE = TypeVar("INNER_TYPE")
+
+# class Wrapper(Generic[INNER_TYPE]):
+#     @staticmethod
+#     def make(INNER_TYPE)->"INNER_TYPE":
+#         return Wrapper(INNER_TYPE)
+
+# cast
+
+
+# class HookMemoDeco
+
 class KeyValueMamo(Memo):
     memo:Memo
 
