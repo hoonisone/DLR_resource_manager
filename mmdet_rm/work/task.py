@@ -8,7 +8,7 @@ from pydantic import Field
 from mmdet_rm.settings import get_settings
 from rm import ID, NAME, PropertyManager, DBView, ResourceDB, ResourceDBFactory, ResourceRecord
 from rm.resource_db.base_model import AutoSavingModel
-from rm.resource_db.property_manager import PathHandling_PropertyManager
+from rm.property_manager.property_manager import PathHandling_PropertyManager
 
 if TYPE_CHECKING:
     from .work_resource import WorkRecord, WorkResourceFactory

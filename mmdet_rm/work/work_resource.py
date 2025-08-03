@@ -8,7 +8,7 @@ from pydantic import Field
 from pydantic.functional_serializers import field_serializer
 
 from rm.resource_db.base_model import AutoSavingModel
-from rm.resource_db.property_manager import PathHandling_PropertyManager
+from rm.property_manager.property_manager import PathHandling_PropertyManager
 
 from ..settings import get_settings
 from rm import NAME, ResourceDB, ResourceDBFactory, ResourceRecord, ID, DBView

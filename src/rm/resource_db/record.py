@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 from rm.dirdb.dirdb import ID, NAME
 from rm.resource_db.base_model import AutoSavingModel
-from rm.resource_db.property_manager import PropertyManager
+from rm.property_manager.property_manager import PropertyManager
 
 # PROPERTY_MANAGER = TypeVar('PROPERTY_MANAGER_CLASS', bound=PropertyManager)
 PROPERTY_MANAGER = TypeVar('PROPERTY_MANAGER_CLASS', bound=AutoSavingModel)

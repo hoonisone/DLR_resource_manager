@@ -8,7 +8,7 @@ from pydantic import Field, PrivateAttr, field_serializer
 
 from mmdet_rm.settings import get_settings
 from rm import PropertyManager, DBView, ResourceDBFactory, ResourceRecord, ResourceDB, ID, NAME
-from rm.resource_db.property_manager import PathHandling_PropertyManager
+from rm.property_manager.property_manager import PathHandling_PropertyManager
 from rm.resource_db.base_model import AutoSavingModel
 from typing import Generic
 

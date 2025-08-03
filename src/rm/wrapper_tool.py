@@ -3,7 +3,7 @@ from typing import Any, Generic, TypeVar
 
 INNER_TYPE = TypeVar("INNER_TYPE")
 
-@dataclass
+@dataclass(kw_only=True)
 class Wrapper(Generic[INNER_TYPE]):
     inner_obj: INNER_TYPE
 

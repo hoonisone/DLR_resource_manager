@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 from rm.memo.factory import MemoFactory
-from rm.resource_db.property_manager import PathHandling_PropertyManager, PropertyManager
+from rm.property_manager.property_manager import PathHandling_PropertyManager, PropertyManager
 
 DIR_PATH = Path("test_dir")
 KEY = "key"

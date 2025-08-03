@@ -5,14 +5,14 @@ from typing import Generic, Type, TypeVar, cast
 from typing_extensions import Self
 
 from rm.dirtree.file_name_id_manager import File_Name_ID_Parser
-from .path_tree import PathTreeNode, PurePathTreeNode
+from rm.tree.path_tree import PathTreeNode, PurePathTreeNode
 import re
 
 
 
 def find_db_element_paths(base_dir: Path)->list[Path]:
     # DB의 항목에 해당하는 모든 경로 반환환
-    pattern = re.compile(r'^.+___id_\d+$')
+    pattern = re.compile(r'^.+___id_\d+(?:\.[\w\d_-]+)?$')
     matched_paths = []
 
     def _walk(current_dir: Path):
@@ -71,7 +71,6 @@ class DBTreeNode(PathTreeNode):
         if self.is_empty:
             self.delete()
 
-
 @dataclass
 class FileSystemRecord:
     # 단일 데이터 셋, 모델 또는 작업을 관리한다.
@@ -81,6 +80,11 @@ class FileSystemRecord:
     id:int
     dir_path:Path
 
+@dataclass
+class DirPropertyRecord:
+    db:'FileSystemDB'
+    id:int
+    dir_path:Path
 
 
 RecordType = TypeVar("RecordType", bound=FileSystemRecord)
@@ -93,10 +97,10 @@ class ElementType(Enum):
 class FileSystemDB(Generic[RecordType]):
     # 내부적으로 tree를 이용하며, terminal node를 하나의 항목으로 다루는 클래스
     root_dir_path:Path
-    RecordClass:Type[RecordType] = FileSystemRecord
-    element_type:ElementType = ElementType.DIR
+    RecordClass:Type[RecordType]
+    element_type:ElementType
 
-    name_id_parser:File_Name_ID_Parser = field(default=File_Name_ID_Parser())
+    name_id_parser:File_Name_ID_Parser = field(default=File_Name_ID_Parser(), init=False)
     
     
     def __post_init__(self):
