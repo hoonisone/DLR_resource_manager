@@ -1,11 +1,9 @@
 from pathlib import Path
 from typing import Type
 
+from .file_io import YamlFileIO
 from .memo import FileMemo, HookMemo
 from .property_memo import PropertyMemo, PropertyType
-
-from .file_io import YamlFileIO
-
 
 class MemoFactory:
     def make_file_memo(self, file_path:Path)->FileMemo:
@@ -19,5 +17,7 @@ class MemoFactory:
 
     # def make_file_memo(self, file_path:Path)->FileMemo:
     #     return FileMemo(file_path.with_suffix(".json"), JsonFileIO())
+
+
 
 

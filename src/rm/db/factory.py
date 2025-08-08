@@ -4,10 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Type
 
-from numpy import int16
-
 from rm.memo.property_memo import Property
-
 from .db import ElementType, FileSystemDB
 from .record import FileRecord, PropertyRecord, PropertyType
 
